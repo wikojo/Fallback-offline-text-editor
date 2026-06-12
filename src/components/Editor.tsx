@@ -1,6 +1,7 @@
-import { ChevronRight, FileCode2, X, Play, Save, Check, ArrowRightToLine } from 'lucide-react';
+import { ChevronRight, FileCode2, X, Play, Save, Check, ArrowRightToLine, Search } from 'lucide-react';
 import MonacoEditor from '@monaco-editor/react';
 import { useRef, useState, useEffect } from 'react';
+import { docDatabase } from '../data/docs';
 
 import { emmetHTML, emmetCSS, emmetJSX } from 'emmet-monaco-es';
 
@@ -12,12 +13,19 @@ interface Props {
   onRun: () => void;
   onCloseFile?: () => void;
   file?: { id: string, name: string, language: string };
+  isSyntaxMode?: boolean;
+  onToggleSyntaxMode?: () => void;
 }
 
-export default function Editor({ activeDocId, onLineClick, code, onChange, onRun, onCloseFile, file }: Props) {
+export default function Editor({ activeDocId, onLineClick, code, onChange, onRun, onCloseFile, file, isSyntaxMode, onToggleSyntaxMode }: Props) {
   const [isSaved, setIsSaved] = useState(true);
   const [showSavedMsg, setShowSavedMsg] = useState(false);
   const editorRef = useRef<any>(null);
+  const syntaxModeRef = useRef(isSyntaxMode);
+
+  useEffect(() => {
+    syntaxModeRef.current = isSyntaxMode;
+  }, [isSyntaxMode]);
 
   useEffect(() => {
     setIsSaved(true);
@@ -62,6 +70,8 @@ export default function Editor({ activeDocId, onLineClick, code, onChange, onRun
     monaco.editor.setTheme('github-dark');
 
     editor.onDidChangeCursorPosition((e: any) => {
+      if (!syntaxModeRef.current) return;
+      
       const position = e.position;
       const model = editor.getModel();
       const wordInfo = model.getWordAtPosition(position);
@@ -70,13 +80,16 @@ export default function Editor({ activeDocId, onLineClick, code, onChange, onRun
       
       if (wordInfo) {
         const word = wordInfo.word;
-        if (word === 'const' || word === 'let' || word === 'var') matchedId = 'variable_declaration';
-        if (word === 'forEach' || word === 'map' || word === 'filter') matchedId = 'array_iteration';
+        // Search through the docDatabase for a matching keyword
+        const matchedDoc = docDatabase.find(doc => doc.keywords.includes(word));
+        if (matchedDoc) {
+          matchedId = matchedDoc.id;
+        }
       }
       
       const lineText = model.getLineContent(position.lineNumber);
       if (lineText.includes('=>') && !matchedId) {
-        matchedId = 'functions';
+        matchedId = 'arrow_functions';
       }
 
       if (matchedId) {
@@ -109,7 +122,7 @@ export default function Editor({ activeDocId, onLineClick, code, onChange, onRun
       {/* Breadcrumbs & Actions */}
       <div className="flex items-center justify-between h-8 px-2 md:px-4 border-b border-[#30363D] shrink-0 bg-[#0D1117] overflow-x-auto">
         <div className="flex items-center gap-1 text-[12px] text-[#8B949E] whitespace-nowrap">
-          <span className="hidden sm:inline hover:text-[#58A6FF] cursor-pointer transition-colors">learning-project</span>
+          <span className="hidden sm:inline hover:text-[#58A6FF] cursor-pointer transition-colors">Fallback</span>
           <ChevronRight size={14} className="hidden sm:block text-[#30363D]" />
           <span className="hover:text-[#58A6FF] cursor-pointer transition-colors">src</span>
           <ChevronRight size={14} className="text-[#30363D]" />
@@ -117,6 +130,16 @@ export default function Editor({ activeDocId, onLineClick, code, onChange, onRun
         </div>
         
         <div className="flex items-center gap-4">
+          <button 
+            onClick={onToggleSyntaxMode}
+            title={isSyntaxMode ? "Syntax Search Mode: ON (Click code to search)" : "Syntax Search Mode (Click to enable)"}
+            className={`flex items-center gap-1.5 text-[12px] font-medium transition-colors ${isSyntaxMode ? 'text-[#58A6FF] bg-[#1F6FEB]/20 px-1.5 py-0.5 rounded' : 'text-[#8B949E] hover:text-[#C9D1D9]'}`}
+          >
+            <Search size={13} />
+            <span className="hidden xl:inline">Syntax Help {isSyntaxMode ? 'ON' : 'OFF'}</span>
+            <span className="xl:hidden">{isSyntaxMode ? 'ON' : 'OFF'}</span>
+          </button>
+
           <button 
             onClick={() => {
               editorRef.current?.trigger('keyboard', 'tab', null);

@@ -1,0 +1,9 @@
+{
+  "id": "let",
+  "topic": "let",
+  "category": "JavaScript > Core > Statements",
+  "title": "let",
+  "shortDescription": "Creates a block-scoped variable that can be reassigned.",
+  "syntax": "let name1 = value1;",
+  "description": "Declares a reassignable, block-scoped local variable, optionally initializing it to a value."
+}

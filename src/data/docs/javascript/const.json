@@ -1,0 +1,13 @@
+{
+  "id": "const",
+  "topic": "const",
+  "category": "JavaScript > Core > Statements",
+  "title": "const",
+  "shortDescription": "Creates a variable that cannot be reassigned.",
+  "syntax": "const name1 = value1;",
+  "description": "This declaration creates a constant whose scope can be either global or local to the block in which it is declared.",
+  "note": "const does not mean the value it holds is immutable—just that the variable identifier cannot be reassigned.",
+  "errorMsg": "TypeError: Assignment to constant variable",
+  "errorDescription": "Attempting to modify a const variable will throw a runtime error.",
+  "errorExample": "const score = 100;\nscore = 150; // TypeError: Assignment to constant variable."
+}

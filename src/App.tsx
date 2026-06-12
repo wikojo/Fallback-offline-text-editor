@@ -6,46 +6,17 @@ import Editor from './components/Editor';
 import Documentation from './components/Documentation';
 import Terminal from './components/Terminal';
 import StatusBar from './components/StatusBar';
+import Preview from './components/Preview';
 import { SidebarTab } from './types';
-
-const DEFAULT_CODE = `// Simple greeting application
-
-const greet = (name) => {
-  if (!name) {
-    return "Hello, stranger!";
-  }
-  
-  return \`Hello, \${name}!\`;
-};
-
-const users = ["Alice", "Bob"];
-
-users.forEach(user => {
-  console.log(greet(user));
-});
-
-console.log(greet());
-`;
-
-const DEFAULT_CSS = `body {
-  background-color: #0D1117;
-  color: #C9D1D9;
-  font-family: sans-serif;
-  padding: 2rem;
-}
-
-h1 {
-  color: #58A6FF;
-}
-`;
 
 export default function App() {
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('explorer');
-  const [activeDocId, setActiveDocId] = useState<string>('variable_declaration');
+  const [activeDocId, setActiveDocId] = useState<string>('fetch');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSyntaxMode, setIsSyntaxMode] = useState(false);
   
   const [files, setFiles] = useState([
-    { id: 'index.js', name: 'index.js', language: 'javascript', content: DEFAULT_CODE },
-    { id: 'style.css', name: 'style.css', language: 'css', content: DEFAULT_CSS }
+    { id: 'index.js', name: 'index.js', language: 'javascript', content: '' }
   ]);
   const [activeFileId, setActiveFileId] = useState('index.js');
   
@@ -149,16 +120,12 @@ export default function App() {
     }
   };
 
-  const [outputLines, setOutputLines] = useState<{ id: string, text: string, type: 'log' | 'error' | 'cmd' }[]>([
-    { id: '1', text: 'node src/index.js', type: 'cmd' },
-    { id: '2', text: 'Hello, Alice!', type: 'log' },
-    { id: '3', text: 'Hello, Bob!', type: 'log' },
-    { id: '4', text: 'Hello, stranger!', type: 'log' },
-  ]);
+  const [outputLines, setOutputLines] = useState<{ id: string, text: string, type: 'log' | 'error' | 'cmd' }[]>([]);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMobileDocsOpen, setIsMobileDocsOpen] = useState(false);
+  const [isDocsOpen, setIsDocsOpen] = useState(false);
   const [isTerminalOpen, setIsTerminalOpen] = useState(true);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -168,7 +135,7 @@ export default function App() {
 
   const handleRun = (currentCode: string) => {
     if (activeFile.language === 'html') {
-      showToast('HTML preview interface coming soon.');
+      setIsPreviewOpen(true);
       return;
     }
     if (activeFile.language === 'python') {
@@ -213,7 +180,16 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-[100dvh] text-[#C9D1D9] font-sans overflow-hidden bg-[#0D1117] relative w-full">
-      <Titlebar onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} onActionClick={() => showToast('Action not supported in browser environment.')} />
+      <Titlebar 
+        onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+        onActionClick={() => showToast('Action not supported in browser environment.')} 
+        searchQuery={searchQuery}
+        onSearchChange={(q) => {
+          setSearchQuery(q);
+          if (q) setActiveSidebarTab('docs');
+          if (window.innerWidth >= 768) setIsSidebarOpen(true);
+        }}
+      />
       
       <div className="flex flex-1 overflow-hidden min-h-0 relative">
         {/* Mobile Sidebar Overlay */}
@@ -238,10 +214,12 @@ export default function App() {
           />
           <Sidebar 
             activeTab={activeSidebarTab} 
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
             onTopicSelect={(id) => {
               setActiveDocId(id);
+              setIsDocsOpen(true);
               if (window.innerWidth < 1024) {
-                setIsMobileDocsOpen(true);
                 setIsSidebarOpen(false);
               }
             }} 
@@ -261,24 +239,33 @@ export default function App() {
         
         <div className="flex flex-1 flex-col min-w-0 md:border-l border-[#30363D]">
           <div className="flex flex-1 overflow-hidden relative">
-            <Editor 
-              activeDocId={activeDocId} 
-              onLineClick={(id) => {
-                setActiveDocId(id);
-                if (window.innerWidth < 1024) {
-                  setIsMobileDocsOpen(true);
-                }
-              }} 
-              code={activeFile.content || ''}
-              onChange={handleCodeChange}
-              onRun={() => handleRun(activeFile.content || '')}
-              file={activeFile}
-              onCloseFile={() => showToast('Cannot close the main entry point.')}
-            />
+            <div className="flex-1 overflow-hidden relative">
+              <Editor 
+                activeDocId={activeDocId} 
+                isSyntaxMode={isSyntaxMode}
+                onToggleSyntaxMode={() => setIsSyntaxMode(!isSyntaxMode)}
+                onLineClick={(id) => {
+                  setActiveDocId(id);
+                  setIsDocsOpen(true);
+                }} 
+                code={activeFile.content || ''}
+                onChange={handleCodeChange}
+                onRun={() => handleRun(activeFile.content || '')}
+                file={activeFile}
+                onCloseFile={() => showToast('Cannot close the main entry point.')}
+              />
+            </div>
+            
+            {isPreviewOpen && (
+              <div className="flex-1 border-l border-[#30363D] flex flex-col relative z-20 shadow-[-1px_0_0_#30363D]">
+                <Preview isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} files={files} />
+              </div>
+            )}
+
             <Documentation 
               activeDocId={activeDocId} 
-              isMobileOpen={isMobileDocsOpen}
-              onCloseMobile={() => setIsMobileDocsOpen(false)}
+              isOpen={isDocsOpen}
+              onClose={() => setIsDocsOpen(false)}
             />
           </div>
           <Terminal 

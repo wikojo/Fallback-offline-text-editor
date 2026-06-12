@@ -20,15 +20,6 @@ export default function ActivityBar({ activeTab, onTabChange, onSettingsClick }:
       </button>
 
       <button 
-        onClick={() => onTabChange('search')}
-        title="Search (Cmd+Shift+F)"
-        className={`relative w-10 h-10 flex items-center justify-center transition-colors ${activeTab === 'search' ? 'text-[#C9D1D9]' : 'text-[#8B949E] hover:text-[#C9D1D9]'}`}
-      >
-        <Search size={22} strokeWidth={1.5} />
-        {activeTab === 'search' && <div className="absolute left-0 top-1 bottom-1 w-[2px] bg-[#58A6FF]" />}
-      </button>
-
-      <button 
         onClick={() => onTabChange('docs')}
         title="Documentation Library"
         className={`relative w-10 h-10 flex items-center justify-center transition-colors ${activeTab === 'docs' ? 'text-[#C9D1D9]' : 'text-[#8B949E] hover:text-[#C9D1D9]'}`}

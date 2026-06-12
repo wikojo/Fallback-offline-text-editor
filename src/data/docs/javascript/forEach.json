@@ -1,0 +1,9 @@
+{
+  "id": "forEach",
+  "topic": "Array.prototype.forEach()",
+  "category": "JavaScript > Objects > Array > forEach",
+  "title": "forEach()",
+  "shortDescription": "Executes a provided function once for each array element.",
+  "syntax": "array.forEach(callbackFn);\narray.forEach((element) => { /* ... */ })",
+  "description": "Calls a function for each element in an array. It does not wait for promises and always returns undefined."
+}

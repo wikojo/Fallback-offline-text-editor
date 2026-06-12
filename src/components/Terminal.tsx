@@ -57,7 +57,7 @@ export default function Terminal({ outputLines = [], onClear, isOpen = true, onT
                 if (line.type === 'cmd') {
                   return (
                     <div key={line.id} className="flex gap-2.5 mt-1">
-                      <span className="text-[#3FB950] font-bold shrink-0">~/learning-project</span>
+                      <span className="text-[#3FB950] font-bold shrink-0">~/Fallback</span>
                       <span className="text-[#8B949E] shrink-0">$</span>
                       <span className="text-[#C9D1D9]">{line.text}</span>
                       {index === outputLines.length - 1 && line.text === '' && (
@@ -81,7 +81,7 @@ export default function Terminal({ outputLines = [], onClear, isOpen = true, onT
               })}
               {outputLines.length === 0 && (
                 <div className="flex gap-2.5 mt-1">
-                  <span className="text-[#3FB950] font-bold">~/learning-project</span>
+                  <span className="text-[#3FB950] font-bold">~/Fallback</span>
                   <span className="text-[#8B949E]">$</span>
                   <span className="inline-block w-2 bg-[#58A6FF] animate-pulse h-[1.1em] translate-y-0.5"></span>
                 </div>

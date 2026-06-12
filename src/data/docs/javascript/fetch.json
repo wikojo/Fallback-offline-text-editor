@@ -1,0 +1,9 @@
+{
+  "id": "fetch",
+  "topic": "Fetch API",
+  "category": "JavaScript > Web APIs > Fetch",
+  "title": "fetch()",
+  "shortDescription": "Starts the process of fetching a resource from the network, returning a promise.",
+  "syntax": "fetch(resource)\nfetch(resource, options)",
+  "description": "The global fetch() method starts the process of fetching a resource from the network, returning a promise which is fulfilled once the response is available."
+}

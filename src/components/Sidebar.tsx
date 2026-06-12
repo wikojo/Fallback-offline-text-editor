@@ -1,6 +1,7 @@
-import { FileCode2, ChevronRight, FolderOpen, Book, Plus } from 'lucide-react';
+import { FileCode2, ChevronRight, FolderOpen, Book, Plus, Search } from 'lucide-react';
 import { SidebarTab } from '../types';
 import React, { useState, useRef, useEffect } from 'react';
+import { docDatabase, searchDocs, DocEntry } from '../data/docs';
 
 interface Props {
   activeTab: SidebarTab;
@@ -11,9 +12,11 @@ interface Props {
   onFileSelect?: (id: string) => void;
   onNewFile?: (name: string) => void;
   onOpenLocalFolder?: () => void;
+  searchQuery?: string;
+  onSearchChange?: (q: string) => void;
 }
 
-export default function Sidebar({ activeTab, activeTopicId, onTopicSelect, files = [], activeFileId, onFileSelect, onNewFile, onOpenLocalFolder }: Props) {
+export default function Sidebar({ activeTab, activeTopicId, onTopicSelect, files = [], activeFileId, onFileSelect, onNewFile, onOpenLocalFolder, searchQuery = '', onSearchChange }: Props) {
   const [isCreating, setIsCreating] = useState(false);
   const [newFileName, setNewFileName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -66,7 +69,7 @@ export default function Sidebar({ activeTab, activeTopicId, onTopicSelect, files
           <div className="flex items-center gap-1.5 px-2 py-1 text-[13px] font-semibold text-[#C9D1D9] hover:bg-[#21262D] rounded-sm cursor-pointer transition-colors">
             <ChevronRight size={14} className="text-[#8B949E] transition-transform rotate-90" />
             <FolderOpen size={14} className="text-[#58A6FF]" />
-            <span className="truncate">learning-project</span>
+            <span className="truncate">Fallback</span>
           </div>
           <div className="ml-5 mt-0.5 flex flex-col gap-0.5">
             {isCreating && (
@@ -79,7 +82,6 @@ export default function Sidebar({ activeTab, activeTopicId, onTopicSelect, files
                   onChange={(e) => setNewFileName(e.target.value)}
                   onKeyDown={handleKeyDown}
                   onBlur={() => {
-                    // Slight delay to allow save if clicking out
                     setTimeout(() => {
                       setIsCreating(false);
                       setNewFileName('');
@@ -117,58 +119,65 @@ export default function Sidebar({ activeTab, activeTopicId, onTopicSelect, files
     );
   }
 
-  if (activeTab === 'docs') {
-    return (
-      <div className="w-60 bg-[#0D1117] border-r border-[#30363D] flex flex-col shrink-0 shadow-[-1px_0_0_#30363D_inset]">
-        <div className="h-9 flex items-center px-4 font-semibold text-[11px] tracking-wider text-[#8B949E] uppercase">
-          Reference Library
+  const results = searchDocs(searchQuery);
+
+  return (
+    <div className="w-60 bg-[#0D1117] border-r border-[#30363D] flex flex-col shrink-0 shadow-[-1px_0_0_#30363D_inset] h-full">
+      <div className="h-9 flex items-center px-4 font-semibold text-[11px] tracking-wider text-[#8B949E] uppercase">
+        Reference Library
+      </div>
+      {(activeTab === 'docs') && (
+        <div className="px-3 py-2 border-b border-[#30363D]">
+          <div className="relative">
+            <Search size={14} className="absolute left-2.5 top-2 text-[#8B949E]" />
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
+              placeholder="Search documentation..." 
+              className="w-full bg-[#010409] border border-[#30363D] rounded px-8 py-1.5 text-[12px] text-[#C9D1D9] placeholder:text-[#8B949E] focus:outline-none focus:border-[#58A6FF] transition-colors"
+            />
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto px-1 py-1">
-          <div className="mb-2">
+      )}
+      <div className="flex-1 overflow-y-auto px-1 py-1">
+        <div className="mb-2">
+          {searchQuery && results.length === 0 && (
+            <div className="px-4 py-3 text-[12px] text-[#8B949E] text-center">
+              No results found for "{searchQuery}"
+            </div>
+          )}
+          {(!searchQuery && results.length > 0) && (
             <div className="flex items-center gap-1.5 px-2 py-1 text-[13px] font-semibold text-[#C9D1D9] hover:bg-[#21262D] rounded-sm cursor-pointer transition-colors">
               <ChevronRight size={14} className="text-[#8B949E] transition-transform rotate-90" />
               <Book size={14} className="text-[#A371F7]" />
-              <span>JavaScript MDN Core</span>
+              <span>JavaScript Documentation</span>
             </div>
-            <div className="ml-5 mt-0.5 flex flex-col gap-0.5">
-              {[
-                { id: 'variable_declaration', title: 'Variable Declarations (const)' },
-                { id: 'array_iteration', title: 'Array.prototype.forEach()' },
-                { id: 'functions', title: 'Arrow Function Expressions' }
-              ].map(concept => {
-                const isActive = activeTopicId === concept.id;
-                return (
-                  <button
-                    key={concept.id}
-                    onClick={() => onTopicSelect(concept.id)}
-                    className={`flex items-center gap-2 px-2 py-1 text-[12px] text-left rounded-sm transition-colors ${
-                      isActive 
-                        ? 'bg-[#1F6FEB]/15 text-[#58A6FF]' 
-                        : 'text-[#8B949E] hover:text-[#C9D1D9] hover:bg-[#21262D]'
-                    }`}
-                  >
-                    <span className="truncate">{concept.title}</span>
-                  </button>
-                );
-              })}
-            </div>
+          )}
+          <div className={`${!searchQuery ? 'ml-5' : 'ml-1'} mt-0.5 flex flex-col gap-0.5`}>
+            {results.map(concept => {
+              const isActive = activeTopicId === concept.id;
+              return (
+                <button
+                  key={concept.id}
+                  onClick={() => onTopicSelect(concept.id)}
+                  className={`flex flex-col gap-0.5 px-2 py-1.5 text-left rounded-sm transition-colors ${
+                    isActive 
+                      ? 'bg-[#1F6FEB]/15 text-[#58A6FF]' 
+                      : 'text-[#8B949E] hover:text-[#C9D1D9] hover:bg-[#21262D]'
+                  }`}
+                >
+                  <span className="truncate text-[12px] font-medium">{concept.topic}</span>
+                  {searchQuery && (
+                    <span className="line-clamp-2 text-[11px] opacity-70 leading-snug">
+                      {concept.shortDescription}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-60 bg-[#0D1117] border-r border-[#30363D] flex flex-col shrink-0">
-      <div className="h-9 flex items-center px-4 font-semibold text-[11px] tracking-wider text-[#8B949E] uppercase">
-        Search Docs
-      </div>
-      <div className="p-3">
-        <input 
-          type="text" 
-          placeholder="Search documentation..." 
-          className="w-full bg-[#010409] border border-[#30363D] rounded px-2.5 py-1.5 text-[12px] text-[#C9D1D9] placeholder:text-[#8B949E] focus:outline-none focus:border-[#58A6FF] transition-colors"
-        />
       </div>
     </div>
   );

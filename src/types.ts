@@ -1,4 +1,4 @@
-export type SidebarTab = 'explorer' | 'docs' | 'search';
+export type SidebarTab = 'explorer' | 'docs';
 
 export interface DocSection {
   id: string;

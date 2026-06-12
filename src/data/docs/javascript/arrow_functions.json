@@ -1,0 +1,9 @@
+{
+  "id": "arrow_functions",
+  "topic": "Arrow function expressions",
+  "category": "JavaScript > Functions > Arrow functions",
+  "title": "Arrow Functions",
+  "shortDescription": "A compact alternative to a traditional function expression.",
+  "syntax": "(param1, param2) => { statements }\n(param1, param2) => expression",
+  "description": "Arrow functions do not bind their own 'this', 'arguments', or 'super'. They are ill-suited as methods and cannot be used as constructors."
+}
